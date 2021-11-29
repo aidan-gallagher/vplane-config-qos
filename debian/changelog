@@ -473,7 +473,11 @@ vplane-config-qos (3.0.0) unstable; urgency=medium
   * platform: block QoS config on DANOS AS5916-54XKS platform
 
   [ Ramkumar Ganapathysubramanian ]
-  * Added warning for QoS CLI where validations were skipped. Root Cause:Some of the QoS policy validations were skipped in the scripts due to incorrect parsing of the command tree node. Fix: Added a warning to alert the user of the skipped validations since we do not want to break the backward compatibility of image upgrades by fixing the CLI issue. VRVDR-48555
+  * Added warning for QoS CLI where validations were skipped. Root Cause:Some of
+    the QoS policy validations were skipped in the scripts due to incorrect
+    parsing of the command tree node. Fix: Added a warning to alert the user of
+    the skipped validations since we do not want to break the backward
+    compatibility of image upgrades by fixing the CLI issue. VRVDR-48555
 
   [ Alan Dewar ]
   * Fix getting op-mode state for vhost interfaces (Fixes: VRVDR-49453)
