@@ -33,11 +33,11 @@ vplane-config-qos (7.0.0) unstable; urgency=medium
   * Remove extraneous Yang must statement (Fixes: VRVDR-54991)
 
   [ Aidan Gallagher ]
-  * Inital Jenkinsfile and codechecks
+  * Initial Jenkinsfile and codechecks
   * Change Jenkinsfile for QoS
   * Perlcritic fix - reorder use statements
   * Perlcritic fix - replace return undef with return
-  * Perlcritic fix - declare variable on seperate line
+  * Perlcritic fix - declare variable on separate line
   * Flake8 - set max line length to 120
   * Flake8 - fix E124
   * Flake8 - fix E127
@@ -102,7 +102,7 @@ vplane-config-qos (7.0.0) unstable; urgency=medium
   * Checks traffic class does not have more than 8 queues
   * Check traffic class during validation/commit
   * Remove superfluous code in shaper check
-  * Codechecks: print more more explanatory message
+  * Codechecks: print more explanatory message
   * Check that only 1 queue limit type is being set
 
   [ Alan Dewar ]
