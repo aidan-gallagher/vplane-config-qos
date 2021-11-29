@@ -1,6 +1,6 @@
 Source: vplane-config-qos
 Section: contrib/net
-Priority: extra
+Priority: optional
 Maintainer: Vyatta Package Maintainers <DL-vyatta-help@att.com>
 Build-Depends: debhelper-compat (= 12),
                dh-yang,
@@ -72,7 +72,7 @@ Description: Vplane QoS tests
 
 Package: vyatta-policy-qos-vci
 Architecture: any
-Priority: extra
+Priority: optional
 Depends: python3 (>= 3.6), python3-vci, python3-systemd, ${misc:Depends},
 	 vyatta-resources-group-v1-yang (>= 4.1.0), vyatta-res-grp-vci,
 	 python3-vyatta-cfgclient, vyatta-interfaces-bonding (>= 0.52),
@@ -82,7 +82,7 @@ Description: Policy QoS VCI Service
 
 Package: vyatta-policy-filter
 Architecture: any
-Priority: extra
+Priority: optional
 Depends: python3 (>= 3.6), python3-vci, python3-systemd, ${misc:Depends},
          vyatta-policy-filter-classification-v1-yang, vyatta-resources-gpc,
          vyatta-dataplane-cfg-pb-vyatta:gpc-config-0
