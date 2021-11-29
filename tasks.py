@@ -234,7 +234,7 @@ def lintian(context):
     Having issues with error: source-is-missing .../test_show_queueing.cpython-39-pytest-6.2.5.pyc
     For some reason lintian find pycache files even when they don't exist anymore.
     """
-    context.run("lintian --fail-on error --profile vyatta", echo=True)
+    context.run("lintian --fail-on warning --profile vyatta", echo=True)
 
 
 @task(pre=[flake8, mypy, pytest, coverage, gitlint, licence, whitespace, package, clean, lintian])
