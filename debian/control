@@ -61,8 +61,8 @@ Package: vyatta-policy-filter-classification-v1-yang
 Architecture: all
 Depends: vplane-config-qos, ${misc:Depends}, ${yang:Depends}
 Description: Filter based classification yang
-  YANG module for filter based classification using the Vyatta
-  Generic Packet Classifier
+ YANG module for filter based classification using the Vyatta
+ Generic Packet Classifier
 
 Package: vyatta-vplane-qos-tests
 Architecture: all
