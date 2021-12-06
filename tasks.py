@@ -192,7 +192,7 @@ def licence(context, commits="master...HEAD"):
 def whitespace(context, commits="master...HEAD"):
     """
     Check files do no contain trailing whitespace.
-    Static anaylsis tools (.eg flake8) can check this for source files (eg. Python),
+    Static analysis tools (.eg flake8) can check this for source files (eg. Python),
     however we need to implement our own check for other files (eg. debian/control).
     """
     files = get_files(commits)
@@ -203,7 +203,7 @@ def whitespace(context, commits="master...HEAD"):
     files_str = " ".join(files)
 
     # Grep for white space before end of line
-    # Exclaimation mark at the start inverts the return code so matches are errors
+    # Exclamation mark at the start inverts the return code so matches are errors
     command = rf'! grep --with-filename --line-number --only-matching "\s$" {files_str}'
     context.run(command, echo=True)
 
@@ -230,7 +230,7 @@ def clean(context):
 @task
 def lintian(context):
     """
-    Lint debain packages.
+    Lint debian packages.
     Having issues with error: source-is-missing .../test_show_queueing.cpython-39-pytest-6.2.5.pyc
     For some reason lintian find pycache files even when they don't exist anymore.
     """
