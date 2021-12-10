@@ -4,7 +4,7 @@
 #
 # SPDX-License-Identifier: LGPL-2.1-only
 
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 
 class DropSummaryTableRow:
@@ -37,8 +37,8 @@ class DropSummaryTableRow:
     def __lt__(self, other):
         """
         Class has to be sortable so table rows can be ordered by dropped percentage.
-        If interface does not have a qos policy then place it to the bottom (low)
-        Treat interface 'Total' as an exception and always place it at the top (high)
+        If interface does not have a qos policy then place it to the bottom (low).
+        Treat interface 'Total' as an exception and always place it at the top (high).
         """
         if self.interface_name == "Total":
             return False
@@ -73,45 +73,76 @@ def extract_drop_summary_data(qos_data: Dict) -> List[DropSummaryTableRow]:
     which totals the packet data from each interface.
     """
 
-    class NoSubports(Exception):
-        pass
+    def get_row_data(interface: str, traffic_classes: dict, total: DropSummaryTableRow) \
+            -> Tuple[DropSummaryTableRow, DropSummaryTableRow]:
+        """
+        Given a dictionary of traffic class data for an interface, gather the packet data
+        needed to populate the table row.
+        Update the total row with the new information.
+        """
+        row = DropSummaryTableRow(interface)
+        assert total.packet_data
+        assert row.packet_data
+
+        for tc in traffic_classes:
+            row.packet_data["queued_packets"] += tc['packets']
+            row.packet_data["dropped_packets"] += tc['dropped'] + tc['random_drop']
+
+        if row.packet_data and row.packet_data["queued_packets"] > 0:
+            row.packet_data["dropped_percentage"] = ((row.packet_data["dropped_packets"]
+                                                    / row.packet_data["queued_packets"])
+                                                    * 100)
+
+            total.packet_data["queued_packets"] += row.packet_data["queued_packets"]
+            total.packet_data["dropped_packets"] += row.packet_data["dropped_packets"]
+            total.packet_data["dropped_percentage"] += row.packet_data["dropped_percentage"]
+        
+        return row, total
 
     table_data: List[DropSummaryTableRow] = []
     total = DropSummaryTableRow("Total")
     assert total.packet_data
 
-    for interface in qos_data:
-        row = DropSummaryTableRow(interface)
-        assert row.packet_data
+    for interface_name in qos_data:
+
+        # Try and get the trunk QoS policy for the interface.
+        # A KeyError or IndexError signifies there is no QoS policy on the interface.
+        # If no QoS policy, then add the interface to the table and move on to next interface
         try:
-            subports = qos_data[interface]['shaper']['subports']
-            if subports:
-                for subport in subports:
-                    for tc in subport['tc']:
-                        row.packet_data["queued_packets"] += tc['packets']
-                        row.packet_data["dropped_packets"] += tc['dropped'] + \
-                            tc['random_drop']
-            else:
-                raise NoSubports
-        except (KeyError, NoSubports):
-            # Interface does not have qos
+            shaper = qos_data[interface_name]['shaper']
+            subports = shaper['subports']
+            trunk_tcs = subports[0]['tc']
+        except (KeyError, IndexError):
+            row = DropSummaryTableRow(interface_name)
             row.packet_data = None
+            table_data.append(row)
+            continue
 
-        if row.packet_data and row.packet_data["queued_packets"] > 0:
-            row.packet_data["dropped_percentage"] = ((row.packet_data["dropped_packets"]
-                                                      / row.packet_data["queued_packets"])
-                                                     * 100)
-
-            total.packet_data["queued_packets"] += row.packet_data["queued_packets"]
-            total.packet_data["dropped_packets"] += row.packet_data["dropped_packets"]
-            total.packet_data["dropped_percentage"] += row.packet_data["dropped_percentage"]
+        # Get table row data for interface with qos policy on trunk
+        row, total = get_row_data(interface_name, trunk_tcs, total)
         table_data.append(row)
 
+        # If interface doesn't have any vlans then skip past this
+        # Get table row data for each vlan interface.
+        # KeyError signifies there is no QoS policy on the virtual interface.
+        # If no QoS policy, then add the virtual interface to the table and move on to next virtual interface
+        if "vlans" in shaper:
+            for vlan in shaper['vlans']:
+                    vlan_interface_name = interface_name + "." + str(vlan['tag'])
+                    try: 
+                        subport_index = vlan['subport']
+                        vlan_tcs = subports[subport_index]['tc']
+                    except KeyError:
+                        row = DropSummaryTableRow(vlan_interface_name)
+                        row.packet_data = None
+                        table_data.append(row)
+                        continue
+
+                    row, total = get_row_data(vlan_interface_name, vlan_tcs, total)
+                    table_data.append(row)
+    
     table_data.append(total)
-
-    # Show interfaces with most drops at the top.
     table_data.sort(reverse=True)
-
     return table_data
 
 

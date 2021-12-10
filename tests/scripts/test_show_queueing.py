@@ -23,8 +23,7 @@ def test_show_drop_summary():
                 ],
             }
         },
-        # Virtual Interface with dropped packets
-        "dp0p1s1.1": {
+        "dp0p1s2": {
             "shaper": {
                 "subports": [
                     {
@@ -59,16 +58,72 @@ def test_show_drop_summary():
                 "vlans": [],
                 "subports": [],
             }
-        }
+        },
+
+        # Interface with vlans
+        "dp0p1s3": {
+            "shaper": {
+                "vlans": [
+                    {
+                        "tag": 200,
+                        "subport": 1
+                    },
+                    {
+                        "tag": 400,
+                        "subport": 2
+                    }
+                ],
+                "subports": [
+                    {
+                        "tc": [
+                            {"packets": 1, "dropped": 0, "random_drop": 0},
+                        ],
+                    },
+                    {
+                        "tc": [
+                            {"packets": 2, "dropped": 0, "random_drop": 0},
+                        ],
+                    },
+                    {
+                        "tc": [
+                            {"packets": 3, "dropped": 0, "random_drop": 0},
+                        ],
+                    }
+                ],
+            }
+        },
+        # Interface with vlans that don't have QoS
+        "dp0p1s4": {
+            "shaper": {
+                "vlans": [
+                    {
+                        "tag": 200,
+                    },
+                    {
+                        "tag": 400,
+                    }
+                ],
+                "subports": [
+                    {
+                        "tc": [
+                            {"packets": 1, "dropped": 0, "random_drop": 0},
+                        ],
+                    },
+                ],
+            }
+        },
     }
 
     table_data = show_queueing.extract_drop_summary_data(data)
+    # Run `pytest-3 -s tests/scripts/test_show_queueing.py` and manually inspect printed table format
+    print("\n")
+    show_queueing.print_table(table_data)
 
     row0 = iter(table_data[0])
     assert next(row0) == "Total"                            # Interface Name
-    # Queued Packets = 2200 + 1120
-    assert next(row0) == 3320
-    # Dropped Packets = 340 + 250 + 90
+    # Queued Packets = 2200 + 1120 + 6 + 1 
+    assert next(row0) == 3327
+    # Dropped Packets = 250 + 90
     assert next(row0) == 340
     # Dropped Percentage = (Dropped Packets / Queued Packets) * 100
     assert next(row0) == pytest.approx(19.399, 0.0001)
@@ -79,17 +134,16 @@ def test_show_drop_summary():
     assert next(row3) == 0
     assert next(row3) == 0
 
-    row4 = iter(table_data[4])
-    assert next(row4) == "dp0s9"
+    row5 = iter(table_data[5])
+    assert next(row5) == "dp0p1s3.200"
+
+    row7 = iter(table_data[8])
+    assert next(row7) == "dp0s9"
     # No Qos data on counters.
     # The tabulate library converts None to "-" when printing to the terminal
-    assert next(row4) is None
-    assert next(row4) is None
-    assert next(row4) is None
-
-    # Run `pytest-3 -s tests/scripts/test_show_queueing.py` and manually inspect printed table format
-    print("\n")
-    show_queueing.print_table(table_data)
+    assert next(row7) is None
+    assert next(row7) is None
+    assert next(row7) is None
 
 
 def test_get_difference_normal():
