@@ -73,7 +73,7 @@ def extract_drop_summary_data(qos_data: Dict) -> List[DropSummaryTableRow]:
     which totals the packet data from each interface.
     """
 
-    def get_row_data(interface: str, traffic_classes: dict, total: DropSummaryTableRow) \
+    def get_row_data(interface: str, traffic_classes: dict) \
             -> Tuple[DropSummaryTableRow, DropSummaryTableRow]:
         """
         Given a dictionary of traffic class data for an interface, gather the packet data
@@ -81,7 +81,6 @@ def extract_drop_summary_data(qos_data: Dict) -> List[DropSummaryTableRow]:
         Update the total row with the new information.
         """
         row = DropSummaryTableRow(interface)
-        assert total.packet_data
         assert row.packet_data
 
         for tc in traffic_classes:
@@ -92,16 +91,10 @@ def extract_drop_summary_data(qos_data: Dict) -> List[DropSummaryTableRow]:
             row.packet_data["dropped_percentage"] = ((row.packet_data["dropped_packets"]
                                                     / row.packet_data["queued_packets"])
                                                     * 100)
-
-            total.packet_data["queued_packets"] += row.packet_data["queued_packets"]
-            total.packet_data["dropped_packets"] += row.packet_data["dropped_packets"]
-            total.packet_data["dropped_percentage"] += row.packet_data["dropped_percentage"]
         
-        return row, total
+        return row
 
     table_data: List[DropSummaryTableRow] = []
-    total = DropSummaryTableRow("Total")
-    assert total.packet_data
 
     for interface_name in qos_data:
 
@@ -144,6 +137,19 @@ def extract_drop_summary_data(qos_data: Dict) -> List[DropSummaryTableRow]:
     table_data.append(total)
     table_data.sort(reverse=True)
     return table_data
+
+def add_total_row(tabular_data: List[DropSummaryTableRow]):
+    """
+    If no qos policy on any interfaces then Total should be N/A
+    """
+    total = DropSummaryTableRow("Total")
+    for row in tabular_data:
+        if row.packet_data:
+            valid_data = True
+            total.packet_data["queued_packets"] += row.packet_data["queued_packets"]
+            total.packet_data["dropped_packets"] += row.packet_data["dropped_packets"]
+    
+    total.packet_data["dropped_percentage"] += row.packet_data["dropped_percentage"]
 
 
 def print_table(tabular_data: List[DropSummaryTableRow]):
